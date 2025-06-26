@@ -1,14 +1,25 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'scan_page.dart';
+import 'main.dart';
 
 class ResultPage extends StatelessWidget {
   final File photoFile;
+  final Map<String, dynamic> resultData; // Pour les données reçues du backend
 
-  const ResultPage({super.key, required this.photoFile});
+  const ResultPage({
+    super.key,
+    required this.photoFile,
+    required this.resultData,
+  });
 
   @override
   Widget build(BuildContext context) {
     final double screenWidth = MediaQuery.of(context).size.width;
+
+    final String score = resultData['final_score']?.toString() ?? 'Non disponible';
+    final List<dynamic> materials = resultData['materials'] ?? [];
+    final List<dynamic> suggestions = resultData['suggestions'] ?? [];
 
     return Scaffold(
       backgroundColor: const Color(0xFFF4EFEF),
@@ -91,29 +102,43 @@ class ResultPage extends StatelessWidget {
                     child: SizedBox(
                       width: 223,
                       height: 94,
-                      child : Stack(
+                      child: Stack(
                         children: [
                           Image.asset('assets/images/rectangle.png'),
                           Positioned(
-                              top : 17,
-                              left: 26,
-                              child: SizedBox(
-                                width: 200,
-                                height: 28,
-                                child: Text(
-                                  'Upcycling-score :',
-                                  style: TextStyle(
-                                    fontFamily: 'InriaSerif',
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 20,
-                                  ),
+                            top: 17,
+                            left: 26,
+                            child: SizedBox(
+                              width: 200,
+                              height: 28,
+                              child: Text(
+                                'Upcycling-score :',
+                                style: const TextStyle(
+                                  fontFamily: 'InriaSerif',
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 20,
                                 ),
-                              )
+                              ),
+                            ),
+                          ),
+                          Positioned(
+                            top: 50,
+                            left: 26,
+                            child: Text(
+                              score, // Assure-toi que la variable `score` est bien définie plus haut
+                              style: const TextStyle(
+                                fontSize: 18,
+                                fontWeight: FontWeight.normal,
+                                fontFamily: 'InriaSerif',
+                                color: Colors.black,
+                              ),
+                            ),
                           ),
                         ],
                       ),
                     ),
                   ),
+
 
                   //boite texte "materiaux detectes"
                   Positioned(

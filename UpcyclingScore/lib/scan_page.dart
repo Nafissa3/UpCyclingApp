@@ -3,6 +3,8 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:http/http.dart' as http; // Pour envoyer la photo
 import 'result_page.dart';
+import 'dart:convert'; // pour jsonDecode
+
 
 class ScanPage extends StatefulWidget {
   const ScanPage({super.key});
@@ -42,27 +44,29 @@ class _ScanPageState extends State<ScanPage> {
   }
 
   // Fonction pour envoyer la photo au backend
-  Future<void> _sendPhotoToBackend(File photoFile) async {
-    final uri = Uri.parse('https://ton-api.com/upload'); // Remplace par l'URL de ton backend
+  Future<Map<String, dynamic>?> _sendPhotoToBackend(File photoFile) async {
+    final uri = Uri.parse('http://10.0.2.2:8000/analyze'); // pour émulateur Android
 
     try {
       var request = http.MultipartRequest('POST', uri);
       request.files.add(
-        await http.MultipartFile.fromPath(
-          'image', // doit correspondre au nom attendu par ton backend
-          photoFile.path,
-        ),
+        await http.MultipartFile.fromPath('image', photoFile.path),
       );
 
       var response = await request.send();
 
       if (response.statusCode == 200) {
-        print('Image envoyée avec succès');
+        final responseData = await http.Response.fromStream(response);
+        final decodedJson = jsonDecode(responseData.body);
+        print('JSON reçu : $decodedJson');
+        return decodedJson;
       } else {
-        print('Échec de l\'envoi: ${response.statusCode}');
+        print('Erreur HTTP : ${response.statusCode}');
+        return null;
       }
     } catch (e) {
-      print('Erreur envoi image : $e');
+      print('🚨 Erreur lors de l’envoi : $e');
+      return null;
     }
   }
 
@@ -137,18 +141,19 @@ class _ScanPageState extends State<ScanPage> {
                                   content: Text('Photo prise')),
                             );
 
-                            // Envoi vers le backend
-                            await _sendPhotoToBackend(photoFile);
+                            final resultData = await _sendPhotoToBackend(photoFile);
 
-                            // Naviguer vers la page de résultat
-                            if (!mounted) return;
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder: (context) => ResultPage(
-                                    photoFile: photoFile),
-                              ),
-                            );
+                            if (resultData != null && mounted) {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => ResultPage(
+                                    photoFile: photoFile,
+                                    resultData: resultData,
+                                  ),
+                                ),
+                              );
+                            }
                           } catch (e) {
                             print('Erreur prise photo : $e');
                           }
